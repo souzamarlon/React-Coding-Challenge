@@ -83,8 +83,7 @@ BalanceOutput.propTypes = {
 };
 
 export default connect(state => {
-  let balance = [];
-
+ 
   /* YOUR CODE GOES HERE */
   const { journalEntries = [], accounts = [], userInput } = state;
 
@@ -95,20 +94,33 @@ export default connect(state => {
     endPeriod
   } = userInput;
   
-  const filteredJournals = journalEntries.filter(item=>{
-    return item.ACCOUNT >= startAccount && item.ACCOUNT <= endAccount && item.PERIOD >= new Date(startPeriod) && item.PERIOD <= new Date(endPeriod)
-  })
+  const startDate = new Date(startPeriod);
+  const endDate = new Date(endPeriod);
 
-  balance = filteredJournals.map((journal) => {
-    const accountInfo = accounts.find(acc => acc.ACCOUNT === journal.ACCOUNT) || {};
+  const filteredAccounts = accounts.filter(
+    ({ ACCOUNT }) => ACCOUNT >= startAccount && ACCOUNT <= endAccount
+  );
+
+  const balance = filteredAccounts.flatMap(({ ACCOUNT, LABEL }) => {
+    const entries = journalEntries.filter(
+      (entry) =>
+        entry.ACCOUNT === ACCOUNT &&
+        new Date(entry.PERIOD) >= startDate &&
+        new Date(entry.PERIOD) <= endDate
+    );
   
-    return {
-      ACCOUNT: journal.ACCOUNT,
-      DESCRIPTION: accountInfo.LABEL || '',
-      DEBIT: journal.DEBIT,
-      CREDIT: journal.CREDIT,
-      BALANCE: journal.DEBIT - journal.CREDIT
-    };
+    const DEBIT = entries.reduce((sum, e) => sum + e.DEBIT, 0);
+    const CREDIT = entries.reduce((sum, e) => sum + e.CREDIT, 0);
+  
+    if (DEBIT === 0 && CREDIT === 0) return [];
+  
+    return [{
+      ACCOUNT,
+      DESCRIPTION: LABEL || '',
+      DEBIT,
+      CREDIT,
+      BALANCE: DEBIT - CREDIT,
+    }];
   });
 
   const totalCredit = balance.reduce((acc, entry) => acc + entry.CREDIT, 0);
