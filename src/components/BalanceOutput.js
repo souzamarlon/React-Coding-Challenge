@@ -94,43 +94,7 @@ export default connect(state => {
     endPeriod
   } = userInput;
 
-  const accountValues = accounts.map(acc => acc.ACCOUNT);
-
-  const resolvedStartAccount = startAccount || Math.min(...accountValues);
-
-  const resolvedEndAccount = endAccount || Math.max(...accountValues);
-
-  const periodDates = journalEntries.map(j => new Date(j.PERIOD));
-
-  const resolvedStartPeriod = !isNaN(startPeriod) ? new Date(userInput.startPeriod) : new Date(Math.min(...periodDates.map(d => d.getTime())));
-
-  const resolvedEndPeriod = !isNaN(endPeriod) ? new Date(userInput.endPeriod) : new Date(Math.max(...periodDates.map(d => d.getTime())));
-
-  const filteredAccounts = accounts.filter(
-    ({ ACCOUNT }) => ACCOUNT >= resolvedStartAccount  && ACCOUNT <= resolvedEndAccount
-  );
-
-  const balance = filteredAccounts.flatMap(({ ACCOUNT, LABEL }) => {
-    const entries = journalEntries.filter(
-      (entry) =>
-        entry.ACCOUNT === ACCOUNT &&
-        new Date(entry.PERIOD) >= resolvedStartPeriod &&
-        new Date(entry.PERIOD) <= resolvedEndPeriod
-    );
-  
-    const DEBIT = entries.reduce((sum, e) => sum + e.DEBIT, 0);
-    const CREDIT = entries.reduce((sum, e) => sum + e.CREDIT, 0);
-  
-    if (DEBIT === 0 && CREDIT === 0) return [];
-  
-    return [{
-      ACCOUNT,
-      DESCRIPTION: LABEL || '',
-      DEBIT,
-      CREDIT,
-      BALANCE: DEBIT - CREDIT,
-    }];
-  });
+  const balance = utils.filterBalance({ accounts, journalEntries, startAccount, endAccount, startPeriod, endPeriod})
 
   const totalCredit = balance.reduce((acc, entry) => acc + entry.CREDIT, 0);
   const totalDebit = balance.reduce((acc, entry) => acc + entry.DEBIT, 0);
