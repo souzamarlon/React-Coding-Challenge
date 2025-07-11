@@ -93,20 +93,29 @@ export default connect(state => {
     startPeriod,
     endPeriod
   } = userInput;
-  
-  const startDate = new Date(startPeriod);
-  const endDate = new Date(endPeriod);
+
+  const accountValues = accounts.map(acc => acc.ACCOUNT);
+
+  const resolvedStartAccount = startAccount || Math.min(...accountValues);
+
+  const resolvedEndAccount = endAccount || Math.max(...accountValues);
+
+  const periodDates = journalEntries.map(j => new Date(j.PERIOD));
+
+  const resolvedStartPeriod = !isNaN(startPeriod) ? new Date(userInput.startPeriod) : new Date(Math.min(...periodDates.map(d => d.getTime())));
+
+  const resolvedEndPeriod = !isNaN(endPeriod) ? new Date(userInput.endPeriod) : new Date(Math.max(...periodDates.map(d => d.getTime())));
 
   const filteredAccounts = accounts.filter(
-    ({ ACCOUNT }) => ACCOUNT >= startAccount && ACCOUNT <= endAccount
+    ({ ACCOUNT }) => ACCOUNT >= resolvedStartAccount  && ACCOUNT <= resolvedEndAccount
   );
 
   const balance = filteredAccounts.flatMap(({ ACCOUNT, LABEL }) => {
     const entries = journalEntries.filter(
       (entry) =>
         entry.ACCOUNT === ACCOUNT &&
-        new Date(entry.PERIOD) >= startDate &&
-        new Date(entry.PERIOD) <= endDate
+        new Date(entry.PERIOD) >= resolvedStartPeriod &&
+        new Date(entry.PERIOD) <= resolvedEndPeriod
     );
   
     const DEBIT = entries.reduce((sum, e) => sum + e.DEBIT, 0);
