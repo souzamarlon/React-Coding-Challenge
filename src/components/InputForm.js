@@ -27,7 +27,6 @@ class InputForm extends Component {
 
 
     if (this.state.userInput.trim() === "") {
-      alert("Please fill in the User input field.");
       this.setState({ error: "User input is required." });
       return;
     }
@@ -53,8 +52,13 @@ class InputForm extends Component {
 
         <div className="form-group">
           <label htmlFor="userInput">User input</label>
-          <input type="text" className="form-control" id="userInput" value={this.state.userInput} onChange={this.handleChange} />
-          {this.state.error && <small className="text-danger">{this.state.error}</small>}
+          <input type="text" className="form-control" id="userInput" value={this.state.userInput} onChange={this.handleChange} placeholder="e.g. 1000 5000 MAR-16 JUL-16 HTML" />
+          <small style={{ color: 'gray' }}>
+            Format: startAccount endAccount startPeriod endPeriod HTML/CSV
+          </small>
+          {this.state.error &&  <div style={{ color: 'red', marginTop: 4 }}>
+            Please use the format: <code>1000 5000 MAR-16 JUL-16 HTML</code>
+          </div>}
         </div>
 
         <button type="submit" className="btn btn-primary">Submit</button>
